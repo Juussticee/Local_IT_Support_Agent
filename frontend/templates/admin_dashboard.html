@@ -1,0 +1,970 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-effect rounded-3 p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4">
+                            <div class="icon-circle bg-primary">
+                                <i class="fas fa-user-shield fa-2x"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="display-6 mb-2">
+                                <span class="gradient-text">Admin Dashboard</span>
+                            </h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-crown me-1"></i>
+                                Welcome back, {{ user.full_name or user.username }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-2"></i>
+                            Admin Menu
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('index') }}">
+                                    <i class="fas fa-eye me-2"></i>User View
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('agent') }}">
+                                    <i class="fas fa-robot me-2"></i>AI Assistant
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin_logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-info hover-lift bg-dark">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-ticket-alt fa-3x text-info"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold text-info mb-2">{{ stats.total or 0 }}</h2>
+                    <h6 class="text-uppercase text-muted mb-0 letter-spacing">Total Tickets</h6>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-warning hover-lift bg-dark">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-exclamation-circle fa-3x text-warning"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold text-warning mb-2">{{ stats.open or 0 }}</h2>
+                    <h6 class="text-uppercase text-muted mb-0 letter-spacing">Open Issues</h6>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-primary hover-lift bg-dark">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x text-primary"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold text-primary mb-2">{{ stats.in_progress or 0 }}</h2>
+                    <h6 class="text-uppercase text-muted mb-0 letter-spacing">In Progress</h6>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-success hover-lift bg-dark">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle fa-3x text-success"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold text-success mb-2">{{ stats.resolved or 0 }}</h2>
+                    <h6 class="text-uppercase text-muted mb-0 letter-spacing">Resolved</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-lg bg-dark border-secondary">
+                <div class="card-header border-secondary bg-gradient text-white" style="background: var(--primary-gradient);">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-tools me-2"></i> Admin Actions
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ url_for('tickets') }}" class="btn btn-outline-primary h-100 w-100 d-flex flex-column align-items-center justify-content-center p-4 text-decoration-none hover-lift">
+                                <i class="fas fa-list fa-2x mb-3"></i>
+                                <h6 class="mb-1">All Tickets</h6>
+                                <small class="text-muted">View and manage</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{{ url_for('create_ticket_form') }}" class="btn btn-outline-success h-100 w-100 d-flex flex-column align-items-center justify-content-center p-4 text-decoration-none hover-lift">
+                                <i class="fas fa-plus fa-2x mb-3"></i>
+                                <h6 class="mb-1">Create Ticket</h6>
+                                <small class="text-muted">New support ticket</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <button class="btn btn-outline-info h-100 w-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="assignTicketsToMe()">
+                                <i class="fas fa-user-plus fa-2x mb-3"></i>
+                                <h6 class="mb-1">Assign to Me</h6>
+                                <small class="text-muted">Take unassigned</small>
+                            </button>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <button class="btn btn-outline-warning h-100 w-100 d-flex flex-column align-items-center justify-content-center p-4" onclick="refreshDashboard()">
+                                <i class="fas fa-sync-alt fa-2x mb-3"></i>
+                                <h6 class="mb-1">Refresh</h6>
+                                <small class="text-muted">Update data</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg bg-dark border-secondary">
+                <div class="card-header border-secondary">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-filter me-2 text-info"></i> Ticket Filters
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="adminStatusFilter" class="form-label small">Status</label>
+                            <select id="adminStatusFilter" class="form-select form-select-sm">
+                                <option value="Active">Active Tickets (New + In Progress)</option>
+                                <option value="All">All Tickets</option>
+                                <option value="New">New Only</option>
+                                <option value="In Progress">In Progress Only</option>
+                                <option value="Resolved">Resolved Only</option>
+                                <option value="Closed">Closed Only</option>
+                                <option value="Unread">Unread Messages</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="adminAssigneeFilter" class="form-label small">Assignee</label>
+                            <select id="adminAssigneeFilter" class="form-select form-select-sm">
+                                <option value="">All Assignees</option>
+                                <option value="unassigned">Unassigned</option>
+                                <option value="{{ user.username }}">My Tickets</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="adminPriorityFilter" class="form-label small">Priority</label>
+                            <select id="adminPriorityFilter" class="form-select form-select-sm">
+                                <option value="">All Priorities</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button onclick="applyAdminFilters()" class="btn btn-info btn-sm w-100">
+                                <i class="fas fa-filter me-1"></i> Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tickets -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg bg-dark border-secondary">
+                <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-history me-2 text-info"></i> 
+                        <span id="ticketSectionTitle">Active Tickets</span>
+                        <span class="badge bg-info ms-2" id="ticketCount">{{ recent_tickets|length }}</span>
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-info btn-sm" onclick="refreshTickets()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                        <a href="{{ url_for('tickets') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i> View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_tickets %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle">
+                            <thead class="table-dark border-secondary">
+                                <tr>
+                                    <th class="border-0">
+                                        <i class="fas fa-hashtag me-1"></i> ID
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-user me-1"></i> Employee
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Issue
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-flag me-1"></i> Priority
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-tasks me-1"></i> Status
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-user-tie me-1"></i> Assigned
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-calendar me-1"></i> Created
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-cogs me-1"></i> Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTableBody">
+                                {% for ticket in recent_tickets %}
+                                <tr class="fade-in" data-delay="{{ loop.index0 * 0.1 }}">
+                                    <td>
+                                        <span class="badge bg-primary rounded-pill px-3">#{{ ticket.ticket_id }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-gradient rounded-circle me-2 d-flex align-items-center justify-content-center text-white">
+                                                {{ ticket.employee_name[0].upper() }}
+                                            </div>
+                                            {{ ticket.employee_name }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 250px;" title="{{ ticket.issue_description }}">
+                                            {{ ticket.issue_description }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if ticket.priority == 'Critical' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ ticket.priority }}
+                                            </span>
+                                        {% elif ticket.priority == 'High' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-arrow-up me-1"></i>{{ ticket.priority }}
+                                            </span>
+                                        {% elif ticket.priority == 'Medium' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-minus me-1"></i>{{ ticket.priority }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-arrow-down me-1"></i>{{ ticket.priority }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm status-select" 
+                                                data-ticket-id="{{ ticket.ticket_id }}" 
+                                                data-current-status="{{ ticket.status }}">
+                                            <option value="New" {{ 'selected' if ticket.status == 'New' else '' }}>New</option>
+                                            <option value="In Progress" {{ 'selected' if ticket.status == 'In Progress' else '' }}>In Progress</option>
+                                            <option value="Resolved" {{ 'selected' if ticket.status == 'Resolved' else '' }}>Resolved</option>
+                                            <option value="Closed" {{ 'selected' if ticket.status == 'Closed' else '' }}>Closed</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm assign-select" 
+                                                data-ticket-id="{{ ticket.ticket_id }}" 
+                                                data-current-assigned="{{ ticket.assigned_to or '' }}">
+                                            <option value="">Unassigned</option>
+                                            <option value="{{ user.username }}" {{ 'selected' if ticket.assigned_to == user.username else '' }}>{{ user.username }}</option>
+                                            <option value="admin" {{ 'selected' if ticket.assigned_to == 'admin' else '' }}>admin</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ ticket.created_at.split('T')[0] if ticket.created_at else 'Unknown' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('admin_ticket_detail', ticket_id=ticket.ticket_id) }}" 
+                                               class="btn btn-outline-{{ 'warning' if ticket.has_new_messages else 'info' }} position-relative" 
+                                               title="{{ 'View Details - New Messages!' if ticket.has_new_messages else 'View Details' }}">
+                                                <i class="fas fa-eye{{ '-slash' if ticket.has_new_messages else '' }}"></i>
+                                                {% if ticket.has_new_messages %}
+                                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle animate-pulse">
+                                                    <span class="visually-hidden">New messages</span>
+                                                </span>
+                                                {% endif %}
+                                            </a>
+                                            <button class="btn btn-outline-{{ 'warning' if ticket.has_new_messages else 'success' }} chat-btn position-relative" 
+                                                    data-ticket-id="{{ ticket.ticket_id }}" 
+                                                    title="{{ 'View AI Chat History - New Messages!' if ticket.has_new_messages else 'View AI Chat History' }}">
+                                                <i class="fas fa-comments{{ '-dollar' if ticket.has_new_messages else '' }}"></i>
+                                                {% if ticket.has_new_messages %}
+                                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle animate-pulse">
+                                                    <span class="visually-hidden">New messages</span>
+                                                </span>
+                                                {% endif %}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-inbox fa-4x text-muted opacity-50"></i>
+                        </div>
+                        <h4 class="text-muted mb-3">No tickets yet</h4>
+                        <p class="text-muted mb-4">
+                            Tickets will appear here as they are created by users.
+                        </p>
+                        <a href="{{ url_for('create_ticket_form') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Create Test Ticket
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently Closed Tickets Section -->
+    <div class="row mt-4" id="closedTicketsSection" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow-lg bg-dark border-secondary">
+                <div class="card-header border-secondary">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-archive me-2 text-muted"></i> Recently Closed Tickets
+                        <span class="badge bg-secondary ms-2" id="closedTicketCount">0</span>
+                    </h6>
+                </div>
+                <div class="card-body" id="closedTicketsContent">
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-archive fa-2x mb-2"></i>
+                        <p>No recently closed tickets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-gradient);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.avatar-xs {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+}
+
+.letter-spacing {
+    letter-spacing: 1px;
+}
+
+.opacity-50 {
+    opacity: 0.5;
+}
+
+.status-select, .assign-select {
+    min-width: 120px;
+}
+
+.status-select:focus, .assign-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Closed ticket styling */
+.ticket-closed {
+    opacity: 0.7;
+    background: rgba(108, 117, 125, 0.1) !important;
+}
+
+.ticket-closed .status-select {
+    background-color: rgba(108, 117, 125, 0.2);
+}
+
+/* Filter panel styling */
+.form-select-sm:focus {
+    border-color: var(--bs-info);
+    box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .status-select, .assign-select {
+        min-width: 100px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Animation for filter changes */
+#ticketsTableBody tr {
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+/* New message indicator styling */
+.position-relative .bg-success {
+    width: 8px !important;
+    height: 8px !important;
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+</style>
+
+<script>
+// Status update functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Apply animation delays to table rows
+    document.querySelectorAll('.fade-in[data-delay]').forEach(function(element) {
+        const delay = element.getAttribute('data-delay');
+        element.style.animationDelay = delay + 's';
+    });
+    
+    // Apply initial styling to closed tickets
+    document.querySelectorAll('.status-select').forEach(select => {
+        if (select.value === 'Closed') {
+            const row = select.closest('tr');
+            row.classList.add('ticket-closed');
+        }
+    });
+    
+    // Set default filter to Active tickets
+    document.getElementById('adminStatusFilter').value = 'Active';
+    applyAdminFilters();
+    
+    // Status change handlers
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const ticketId = this.dataset.ticketId;
+            const newStatus = this.value;
+            const currentStatus = this.dataset.currentStatus;
+            
+            if (newStatus !== currentStatus) {
+                updateTicketStatus(ticketId, newStatus, this);
+            }
+        });
+    });
+    
+    // Assignment change handlers
+    document.querySelectorAll('.assign-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const ticketId = this.dataset.ticketId;
+            const newAssigned = this.value;
+            const currentAssigned = this.dataset.currentAssigned;
+            
+            if (newAssigned !== currentAssigned) {
+                assignTicket(ticketId, newAssigned, this);
+            }
+        });
+    });
+    
+    // Chat button handlers
+    document.querySelectorAll('.chat-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const ticketId = this.dataset.ticketId;
+            openTicketChat(ticketId);
+        });
+    });
+});
+
+function updateTicketStatus(ticketId, newStatus, selectElement) {
+    fetch(`/api/tickets/${ticketId}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            selectElement.dataset.currentStatus = newStatus;
+            ITSupport.showNotification(`Ticket #${ticketId} status updated to ${newStatus}`, 'success');
+        } else {
+            // Revert selection
+            selectElement.value = selectElement.dataset.currentStatus;
+            ITSupport.showNotification('Error updating ticket status: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        selectElement.value = selectElement.dataset.currentStatus;
+        ITSupport.showNotification('Error updating ticket status', 'error');
+    });
+}
+
+function assignTicket(ticketId, newAssigned, selectElement) {
+    fetch(`/api/tickets/${ticketId}/assign`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            assigned_to: newAssigned
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            selectElement.dataset.currentAssigned = newAssigned;
+            const assignedTo = newAssigned || 'Unassigned';
+            ITSupport.showNotification(`Ticket #${ticketId} assigned to ${assignedTo}`, 'success');
+        } else {
+            // Revert selection
+            selectElement.value = selectElement.dataset.currentAssigned;
+            ITSupport.showNotification('Error assigning ticket: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        selectElement.value = selectElement.dataset.currentAssigned;
+        ITSupport.showNotification('Error assigning ticket', 'error');
+    });
+}
+
+function assignTicketsToMe() {
+    if (confirm('Assign all unassigned tickets to yourself?')) {
+        fetch('/api/tickets/assign-unassigned', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assigned_to: '{{ user.username }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ITSupport.showNotification(`Assigned ${data.count} tickets to you`, 'success');
+                refreshDashboard();
+            } else {
+                ITSupport.showNotification('Error assigning tickets: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            ITSupport.showNotification('Error assigning tickets', 'error');
+        });
+    }
+}
+
+function openTicketChat(ticketId) {
+    // Create modal for viewing AI chat history
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'chatModal';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light">
+                        <i class="fas fa-comments me-2 text-info"></i>
+                        AI Chat History - Ticket #${ticketId}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="chatContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-2">Loading chat history...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="/ticket/${ticketId}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i> View Full Ticket
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+    
+    // Load chat messages
+    fetch(`/api/tickets/${ticketId}/messages`)
+        .then(response => response.json())
+        .then(data => {
+            const chatContent = document.getElementById('chatContent');
+            if (data.success && data.messages.length > 0) {
+                chatContent.innerHTML = data.messages.map(msg => `
+                    <div class="message mb-3 p-3 rounded ${msg.sender_type === 'system' ? 'bg-info bg-opacity-10 border-info' : 'bg-secondary bg-opacity-10 border-secondary'} border">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs ${msg.sender_type === 'system' ? 'bg-info' : 'bg-secondary'} rounded-circle me-2 d-flex align-items-center justify-content-center text-white">
+                                    <i class="fas fa-${msg.sender_type === 'system' ? 'robot' : 'user'}"></i>
+                                </div>
+                                <strong class="text-light">${msg.sender_name}</strong>
+                                <span class="badge bg-${msg.sender_type === 'system' ? 'info' : 'secondary'} ms-2">${msg.sender_type}</span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                ${new Date(msg.timestamp).toLocaleString()}
+                            </small>
+                        </div>
+                        <div class="message-content text-light" style="white-space: pre-wrap;">${msg.message}</div>
+                    </div>
+                `).join('');
+                
+                // Remove green dot indicator from both view and chat buttons for this ticket
+                const viewButton = document.querySelector(`a[href*="ticket/${ticketId}"]`);
+                const chatButton = document.querySelector(`button[data-ticket-id="${ticketId}"]`);
+                
+                if (viewButton) {
+                    const greenDot = viewButton.querySelector('.bg-success');
+                    if (greenDot) greenDot.remove();
+                }
+                
+                if (chatButton) {
+                    const greenDot = chatButton.querySelector('.bg-success');
+                    if (greenDot) greenDot.remove();
+                }
+            } else {
+                chatContent.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No chat history found</h5>
+                        <p class="text-muted">This ticket hasn't had any AI assistant interactions yet.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('chatContent').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5 class="text-warning">Error loading chat history</h5>
+                    <p class="text-muted">Unable to load chat messages for this ticket.</p>
+                </div>
+            `;
+        });
+    
+    // Clean up when modal is closed
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
+}
+
+function refreshTickets() {
+    location.reload();
+}
+
+function refreshDashboard() {
+    location.reload();
+}
+
+function applyAdminFilters() {
+    const statusFilter = document.getElementById('adminStatusFilter').value;
+    const assigneeFilter = document.getElementById('adminAssigneeFilter').value;
+    const priorityFilter = document.getElementById('adminPriorityFilter').value;
+    
+    // Update section title based on filter
+    const titleElement = document.getElementById('ticketSectionTitle');
+    switch(statusFilter) {
+        case 'Active':
+            titleElement.textContent = 'Active Tickets';
+            break;
+        case 'Closed':
+            titleElement.textContent = 'Closed Tickets';
+            break;
+        case 'All':
+            titleElement.textContent = 'All Tickets';
+            break;
+        case 'Unread':
+            titleElement.textContent = 'Tickets with Unread Messages';
+            break;
+        default:
+            titleElement.textContent = statusFilter + ' Tickets';
+    }
+    
+    // Filter tickets in the table
+    filterAdminTickets(statusFilter, assigneeFilter, priorityFilter);
+}
+
+function filterAdminTickets(statusFilter, assigneeFilter, priorityFilter) {
+    const rows = document.querySelectorAll('#ticketsTableBody tr');
+    const closedSection = document.getElementById('closedTicketsSection');
+    let visibleCount = 0;
+    let closedCount = 0;
+    
+    rows.forEach(row => {
+        let showRow = true;
+        
+        // Status filter
+        if (statusFilter !== 'All') {
+            const statusSelect = row.querySelector('.status-select');
+            const currentStatus = statusSelect.value;
+            
+            if (statusFilter === 'Active') {
+                showRow = currentStatus === 'New' || currentStatus === 'In Progress';
+            } else if (statusFilter === 'Unread') {
+                // Check if ticket has unread messages (green dot)
+                const greenDot = row.querySelector('.position-relative .bg-success');
+                showRow = greenDot !== null;
+            } else {
+                showRow = currentStatus === statusFilter;
+            }
+            
+            // Count closed tickets
+            if (currentStatus === 'Closed') {
+                closedCount++;
+            }
+        }
+        
+        // Assignee filter
+        if (showRow && assigneeFilter) {
+            const assignSelect = row.querySelector('.assign-select');
+            const currentAssigned = assignSelect.value;
+            
+            if (assigneeFilter === 'unassigned') {
+                showRow = !currentAssigned;
+            } else {
+                showRow = currentAssigned === assigneeFilter;
+            }
+        }
+        
+        // Priority filter
+        if (showRow && priorityFilter) {
+            const priorityBadge = row.querySelector('td:nth-child(4) .badge');
+            const currentPriority = priorityBadge.textContent.trim();
+            showRow = currentPriority === priorityFilter;
+        }
+        
+        // Show/hide row
+        if (showRow) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update ticket count
+    document.getElementById('ticketCount').textContent = visibleCount;
+    
+    // Show/hide closed tickets section
+    if (statusFilter === 'Closed' && closedCount > 0) {
+        closedSection.style.display = 'block';
+        document.getElementById('closedTicketCount').textContent = closedCount;
+        
+        // Update closed tickets content
+        const closedContent = document.getElementById('closedTicketsContent');
+        closedContent.innerHTML = `
+            <div class="text-center py-3">
+                <div class="text-info mb-2">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Showing ${closedCount} closed tickets
+                </div>
+                <p class="text-muted small mb-0">
+                    Closed tickets are archived but remain accessible for reference.
+                    <br>They can be reopened if needed by changing their status.
+                </p>
+            </div>
+        `;
+    } else {
+        closedSection.style.display = 'none';
+    }
+    
+    // Show message if no tickets match filter
+    const tableBody = document.getElementById('ticketsTableBody');
+    const existingMessage = document.getElementById('no-tickets-message');
+    
+    if (visibleCount === 0 && !existingMessage) {
+        const messageRow = document.createElement('tr');
+        messageRow.id = 'no-tickets-message';
+        messageRow.innerHTML = `
+            <td colspan="8" class="text-center py-4">
+                <div class="text-muted">
+                    <i class="fas fa-search fa-2x mb-3"></i>
+                    <h6>No tickets match your filter criteria</h6>
+                    <button onclick="clearAdminFilters()" class="btn btn-outline-secondary btn-sm mt-2">
+                        <i class="fas fa-times me-1"></i> Clear Filters
+                    </button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(messageRow);
+    } else if (visibleCount > 0 && existingMessage) {
+        existingMessage.remove();
+    }
+}
+
+function clearAdminFilters() {
+    document.getElementById('adminStatusFilter').value = 'Active';
+    document.getElementById('adminAssigneeFilter').value = '';
+    document.getElementById('adminPriorityFilter').value = '';
+    applyAdminFilters();
+}
+
+// Enhanced status update to handle closed tickets
+function updateTicketStatus(ticketId, newStatus, selectElement) {
+    // Show confirmation for closing tickets
+    if (newStatus === 'Closed') {
+        if (!confirm(`Are you sure you want to close ticket #${ticketId}? Closed tickets are typically archived and may be harder to reopen.`)) {
+            selectElement.value = selectElement.dataset.currentStatus;
+            return;
+        }
+    }
+    
+    fetch(`/api/tickets/${ticketId}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            selectElement.dataset.currentStatus = newStatus;
+            
+            // Add visual indication for closed tickets
+            const row = selectElement.closest('tr');
+            if (newStatus === 'Closed') {
+                row.style.opacity = '0.7';
+                row.style.background = 'rgba(108, 117, 125, 0.1)';
+            } else {
+                row.style.opacity = '1';
+                row.style.background = '';
+            }
+            
+            ITSupport.showNotification(`Ticket #${ticketId} status updated to ${newStatus}`, 'success');
+            
+            // Auto-refresh if viewing active tickets and ticket was closed
+            const currentFilter = document.getElementById('adminStatusFilter').value;
+            if (currentFilter === 'Active' && newStatus === 'Closed') {
+                setTimeout(() => {
+                    applyAdminFilters();
+                }, 1000);
+            }
+        } else {
+            // Revert selection
+            selectElement.value = selectElement.dataset.currentStatus;
+            ITSupport.showNotification('Error updating ticket status: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        selectElement.value = selectElement.dataset.currentStatus;
+        ITSupport.showNotification('Error updating ticket status', 'error');
+    });
+}
+
+// Remove green dots when ticket is viewed
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handler to all view ticket buttons
+    document.querySelectorAll('a[href*="/admin/ticket/"]').forEach(link => {
+        link.addEventListener('click', function() {
+            // Remove green dot from this button
+            const greenDot = this.querySelector('.bg-success');
+            if (greenDot) {
+                greenDot.remove();
+            }
+            
+            // Also remove from the chat button in the same row
+            const row = this.closest('tr');
+            const chatBtn = row.querySelector('.chat-btn .bg-success');
+            if (chatBtn) {
+                chatBtn.remove();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

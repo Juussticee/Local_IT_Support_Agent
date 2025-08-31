@@ -1,0 +1,99 @@
+Network Issues Troubleshooting Guide
+
+PURPOSE:
+Systematic approach to diagnosing and resolving network connectivity issues.
+
+COMMON NETWORK PROBLEMS:
+
+1. NO INTERNET CONNECTION:
+   Symptoms: Cannot access websites, email not syncing, cloud services unavailable
+   
+   Basic Troubleshooting Steps:
+   - Check physical cable connections (Ethernet)
+   - Verify WiFi connection status and signal strength
+   - Restart network adapter (disable/enable)
+   - Restart computer
+   - Test with different device on same network
+   - Check with other employees for widespread issues
+
+   Advanced Steps:
+   - Release and renew IP address (ipconfig /release, ipconfig /renew)
+   - Flush DNS cache (ipconfig /flushdns)
+   - Reset network stack (netsh winsock reset)
+   - Update network drivers
+   - Check proxy settings
+
+2. SLOW NETWORK PERFORMANCE:
+   Symptoms: Web pages load slowly, file transfers take long time, video calls lag
+   
+   Diagnostic Steps:
+   - Run speed test (speedtest.net)
+   - Check bandwidth usage by other applications
+   - Test wired vs wireless connection
+   - Check for background updates/uploads
+   - Verify QoS settings
+   - Monitor network utilization
+
+3. INTERMITTENT CONNECTIVITY:
+   Symptoms: Connection drops randomly, websites timeout occasionally
+   
+   Investigation Steps:
+   - Check event logs for network errors
+   - Monitor connection stability over time
+   - Test during different times of day
+   - Check for interference (WiFi)
+   - Verify cable integrity
+   - Review DHCP lease times
+
+4. VPN CONNECTION ISSUES:
+   Symptoms: Cannot connect to VPN, frequent disconnections, slow VPN performance
+   
+   Resolution Steps:
+   - Verify VPN credentials
+   - Check VPN server status
+   - Try different VPN servers/protocols
+   - Disable firewall temporarily for testing
+   - Update VPN client software
+   - Check for conflicting network software
+
+ESCALATION CRITERIA:
+
+Level 1 - IT Support Staff:
+- Basic connectivity issues
+- WiFi password resets
+- Simple configuration problems
+- User education and guidance
+
+Level 2 - Network Administrator:
+- DHCP/DNS server issues
+- Switch/router configuration
+- VLAN problems
+- Network infrastructure issues
+
+Level 3 - External ISP/Vendor:
+- Internet service provider issues
+- WAN connectivity problems
+- Carrier circuit problems
+- Hardware replacement needs
+
+NETWORK SECURITY PROTOCOLS:
+- Always verify user identity before providing network access
+- Do not share WiFi passwords via insecure channels
+- Report suspicious network activity immediately
+- Maintain logs of all network configuration changes
+- Follow change management procedures for network modifications
+
+MONITORING AND PREVENTION:
+- Regular network performance monitoring
+- Proactive cable testing and replacement
+- Firmware updates for network equipment
+- Capacity planning and bandwidth monitoring
+- Security vulnerability assessments
+- User training on network best practices
+
+EMERGENCY PROCEDURES:
+- Document all troubleshooting steps taken
+- Escalate to network team if basic steps fail
+- Provide temporary workarounds when possible
+- Communicate expected resolution times to users
+- Follow up to ensure issue is fully resolved

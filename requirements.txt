@@ -1,0 +1,11 @@
+# Requirements for IT Support Agent System
+# Install with: pip install -r requirements.txt
+
+flask==3.1.2
+python-dotenv==1.0.1
+openai==1.55.3
+
+# Optional: For advanced features (can add later)
+# faiss-cpu==1.8.0  # For semantic search
+# speechrecognition==3.10.4  # For voice interface
+# pyttsx3==2.98  # For text-to-speech

@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Create Ticket - IT Support Agent{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-effect rounded-3 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <div class="icon-circle bg-primary">
+                            <i class="fas fa-plus fa-2x"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="display-6 mb-2">
+                            <span class="gradient-text">Create Support Ticket</span>
+                        </h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Submit your IT issue for quick resolution by our expert team
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Main Form Card -->
+            <div class="card shadow-lg mb-4 bg-dark border-secondary">
+                <div class="card-header border-secondary bg-gradient text-white" style="background: var(--primary-gradient);">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-clipboard-list me-2"></i> Ticket Details
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 bg-info bg-opacity-10 text-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-lightbulb fa-lg me-3"></i>
+                            <div>
+                                <strong>Pro Tip:</strong> The more information you provide, the faster we can resolve your issue. 
+                                Include any error messages, steps you've tried, and when the problem started.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form id="createTicketForm" class="ajax-form" action="/api/tickets" method="POST" 
+                          data-redirect="/tickets">
+                        <div class="row g-4">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <label for="employee_name" class="form-label fw-semibold">
+                                    <i class="fas fa-user me-2 text-primary"></i> Your Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="employee_name" 
+                                       name="employee_name" required 
+                                       placeholder="Enter your full name">
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    This helps us identify you when resolving your issue
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="priority" class="form-label fw-semibold">
+                                    <i class="fas fa-flag me-2 text-warning"></i> Priority Level
+                                </label>
+                                <select class="form-select form-select-lg" id="priority" name="priority">
+                                    <option value="Low">🟢 Low - Not urgent, can wait</option>
+                                    <option value="Medium" selected>🟡 Medium - Normal priority</option>
+                                    <option value="High">🟠 High - Urgent, affects work</option>
+                                    <option value="Critical">🔴 Critical - System down, blocks work</option>
+                                </select>
+                                <div class="form-text">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Critical issues are resolved first, followed by high priority
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Issue Description -->
+                        <div class="mt-4">
+                            <label for="issue_description" class="form-label fw-semibold">
+                                <i class="fas fa-clipboard-list me-2 text-success"></i> Issue Description
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="issue_description" 
+                                      name="issue_description" rows="6" required
+                                      placeholder="Please describe your issue in detail:
+
+• What you were trying to do
+• What happened instead  
+• Any error messages you saw
+• Steps you've already tried
+• When did this problem start?
+
+Example: 'I was trying to access my email this morning, but I keep getting an error message that says Authentication Failed. I tried restarting my computer and clearing my browser cache, but the problem persists since yesterday evening.'"></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="form-text">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Minimum 10 characters required for detailed assistance
+                                </div>
+                                <small class="text-muted">
+                                    <span id="charCount">0</span> characters
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Issue Templates -->
+                        <div class="mt-5">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="fas fa-magic me-2 text-info"></i> Quick Templates 
+                                <small class="text-muted">(Click to auto-fill)</small>
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-lg-3 col-md-6">
+                                    <button type="button" class="btn btn-outline-primary h-100 w-100 issue-template hover-lift"
+                                            data-template="I forgot my password and cannot log into my email/system. I tried the 'forgot password' option but didn't receive a reset email. I need assistance resetting my password for: [specify system/email account]">
+                                        <div class="p-3">
+                                            <i class="fas fa-key fa-2x mb-3 text-primary"></i>
+                                            <h6 class="mb-1">Password Reset</h6>
+                                            <small class="text-muted">Can't access your account?</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <button type="button" class="btn btn-outline-success h-100 w-100 issue-template hover-lift"
+                                            data-template="I need to install new software for my work. The software I need is: [software name]. This is required for: [business justification]. I have checked that this software is approved by IT policy and is necessary for my role as [your job title].">
+                                        <div class="p-3">
+                                            <i class="fas fa-download fa-2x mb-3 text-success"></i>
+                                            <h6 class="mb-1">Software Install</h6>
+                                            <small class="text-muted">Need new software?</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <button type="button" class="btn btn-outline-warning h-100 w-100 issue-template hover-lift"
+                                            data-template="I'm experiencing network connectivity issues. My internet connection is slow/intermittent/not working. The problem started: [when]. I have tried restarting my computer and router, but the issue persists. This is affecting: [describe impact on work].">
+                                        <div class="p-3">
+                                            <i class="fas fa-wifi fa-2x mb-3 text-warning"></i>
+                                            <h6 class="mb-1">Network Issues</h6>
+                                            <small class="text-muted">Connection problems?</small>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <button type="button" class="btn btn-outline-danger h-100 w-100 issue-template hover-lift"
+                                            data-template="I'm experiencing hardware problems with my computer. The specific issue is: [describe problem - e.g., won't turn on, strange noises, overheating, keyboard not working]. This started: [when]. The problem is affecting my work because: [explain impact].">
+                                        <div class="p-3">
+                                            <i class="fas fa-desktop fa-2x mb-3 text-danger"></i>
+                                            <h6 class="mb-1">Hardware Issues</h6>
+                                            <small class="text-muted">Computer problems?</small>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-3 justify-content-end mt-5 pt-4 border-top">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- AI Assistant Card -->
+            <div class="card shadow-lg bg-dark border-secondary">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="icon-circle bg-gradient-info mx-auto">
+                            <i class="fas fa-robot fa-2x"></i>
+                        </div>
+                    </div>
+                    <h5 class="card-title gradient-text mb-3">Need Immediate Help?</h5>
+                    <p class="text-muted mb-4">
+                        Our AI Assistant can provide instant guidance for common IT issues and help you troubleshoot problems before creating a ticket.
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="{{ url_for('agent') }}" class="btn btn-info">
+                            <i class="fas fa-robot me-2"></i> Ask AI Assistant
+                        </a>
+                        <a href="{{ url_for('tickets') }}" class="btn btn-outline-info">
+                            <i class="fas fa-history me-2"></i> View Existing Tickets
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8, #20c997);
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.issue-template:hover {
+    border-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.issue-template.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+#charCount {
+    font-weight: 600;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('issue_description');
+    const charCount = document.getElementById('charCount');
+    
+    // Character counter
+    function updateCharCount() {
+        const count = textarea.value.length;
+        charCount.textContent = count;
+        
+        if (count < 10) {
+            charCount.className = 'text-danger fw-bold';
+        } else if (count < 50) {
+            charCount.className = 'text-warning fw-bold';
+        } else {
+            charCount.className = 'text-success fw-bold';
+        }
+    }
+    
+    textarea.addEventListener('input', updateCharCount);
+    updateCharCount(); // Initial count
+    
+    // Handle issue template buttons
+    document.querySelectorAll('.issue-template').forEach(button => {
+        button.addEventListener('click', function() {
+            const template = this.dataset.template;
+            textarea.value = template;
+            updateCharCount();
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.issue-template').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Focus on the textarea so user can edit
+            textarea.focus();
+            
+            // Reset button state after a delay
+            setTimeout(() => {
+                this.classList.remove('active');
+            }, 2000);
+            
+            // Scroll to textarea
+            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    });
+    
+    // Auto-resize textarea
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+    
+    // Form validation
+    const form = document.getElementById('createTicketForm');
+    form.addEventListener('submit', function(e) {
+        const name = document.getElementById('employee_name').value.trim();
+        const description = textarea.value.trim();
+        
+        // Name validation
+        if (name.length < 2) {
+            e.preventDefault();
+            ITSupport.showNotification('Please enter your full name (at least 2 characters).', 'error');
+            document.getElementById('employee_name').focus();
+            return false;
+        }
+        
+        // Description validation
+        if (description.length < 10) {
+            e.preventDefault();
+            ITSupport.showNotification('Please provide a more detailed description of your issue (at least 10 characters).', 'error');
+            textarea.focus();
+            return false;
+        }
+        
+        // Template completion check
+        if (description.includes('[') && (description.includes('[software name]') || 
+            description.includes('[specify') || description.includes('[describe') || 
+            description.includes('[when]') || description.includes('[your job title]'))) {
+            e.preventDefault();
+            ITSupport.showNotification('Please complete the template by filling in the specific details in brackets [ ].', 'warning');
+            textarea.focus();
+            return false;
+        }
+        
+        // Show success message before redirect
+        ITSupport.showNotification('Creating your support ticket...', 'info');
+    });
+    
+    // Keyboard shortcut for quick submission
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+    
+    // Focus on name field when page loads
+    document.getElementById('employee_name').focus();
+});
+</script>
+{% endblock %}

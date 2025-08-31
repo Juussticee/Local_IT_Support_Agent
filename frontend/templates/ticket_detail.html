@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.ticket_id }} Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 bg-dark text-light min-vh-100" style="padding-bottom:40px;">
+    <div class="row">
+        <!-- Ticket Information Card -->
+        <div class="col-lg-8">
+            <div class="card bg-dark border-info mb-4 shadow">
+                <div class="card-header d-flex justify-content-between align-items-center border-info bg-dark text-info">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Ticket #{{ ticket.ticket_id }}
+                    </h4>
+                    <span class="badge bg-{{ 'success' if ticket.status == 'Resolved' else 'warning' if ticket.status == 'In Progress' else 'secondary' }} fs-6">
+                        {{ ticket.status }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Employee:</strong> {{ ticket.employee_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Priority:</strong> 
+                            <span class="badge bg-{{ 'danger' if ticket.priority == 'High' else 'warning' if ticket.priority == 'Medium' else 'info' }}">
+                                {{ ticket.priority }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Created:</strong> {{ ticket.created_at }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Updated:</strong> {{ ticket.updated_at }}
+                        </div>
+                    </div>
+                    {% if ticket.assigned_to %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Assigned To:</strong> {{ ticket.assigned_to }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Issue Description:</strong>
+                        <div class="mt-2 p-3 bg-secondary rounded">
+                            {{ ticket.issue_description }}
+                        </div>
+                    </div>
+                    
+                    {% if ticket.resolution_code %}
+                    <div class="mb-3">
+                        <strong>Resolution:</strong>
+                        <div class="mt-2 p-3 bg-success bg-opacity-25 rounded">
+                            {{ ticket.resolution_code }}
+                        </div>
+                        {% if ticket.resolved_by %}
+                        <small class="text-muted">Resolved by: {{ ticket.resolved_by }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Chat/Communication Section -->
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header border-secondary bg-dark text-info">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Communication History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="chatHistory" class="mb-3" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Chat messages will be loaded here -->
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin"></i> Loading conversation...
+                        </div>
+                    </div>
+                    <!-- Message Input (only for admins or if ticket is open) -->
+                    <div id="messageInput">
+                        <div class="input-group">
+                            <textarea class="form-control bg-dark text-light" id="newMessage" rows="2" placeholder="Type your message..."></textarea>
+                            <button class="btn btn-info" id="sendMessage">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Panel Only -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header border-secondary bg-dark text-info">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        AI Assistant
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Get AI-powered suggestions for this ticket</p>
+                    <button class="btn btn-outline-info w-100" id="getAISuggestion">
+                        <i class="fas fa-lightbulb"></i> Get AI Suggestion
+                    </button>
+                    <div id="aiSuggestion" class="mt-3" style="display: none;">
+                        <!-- AI suggestion will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ticketId = "{{ ticket.ticket_id }}";
+    
+    // Load chat history
+    loadChatHistory();
+    
+    // No update or resolve ticket actions in minimal version
+    
+    // Send message button (user only)
+    document.getElementById('sendMessage').addEventListener('click', sendMessage);
+    
+    // AI suggestion button
+    document.getElementById('getAISuggestion').addEventListener('click', getAISuggestion);
+    
+    // Enter key in message input
+    document.getElementById('newMessage').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    
+    function loadChatHistory() {
+        fetch(`/api/tickets/${ticketId}/messages`)
+            .then(response => response.json())
+            .then(data => {
+                const chatHistory = document.getElementById('chatHistory');
+                if (data.success && data.messages.length > 0) {
+                    chatHistory.innerHTML = data.messages.map(msg => {
+                        const isAI = msg.sender_name === 'AI Assistant' || msg.sender_type === 'assistant';
+                        const isAdmin = msg.sender_type === 'admin';
+                        const isUser = msg.sender_type === 'user' && !isAI;
+                        
+                        let bgClass, textClass, alignment, icon;
+                        
+                        if (isAI) {
+                            bgClass = 'bg-success';
+                            textClass = 'text-white';
+                            alignment = 'me-5';
+                            icon = '<i class="fas fa-robot me-1"></i>';
+                        } else if (isAdmin) {
+                            bgClass = 'bg-info';
+                            textClass = 'text-dark';
+                            alignment = 'ms-5';
+                            icon = '<i class="fas fa-user-tie me-1"></i>';
+                        } else {
+                            bgClass = 'bg-primary';
+                            textClass = 'text-white';
+                            alignment = 'ms-5';
+                            icon = '<i class="fas fa-user me-1"></i>';
+                        }
+                        
+                        return `
+                            <div class="message mb-3 p-3 rounded ${bgClass} ${textClass} ${alignment}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>${icon}${msg.sender_name}</strong>
+                                    <small class="opacity-75">${msg.timestamp}</small>
+                                </div>
+                                <div class="mt-1">${msg.message}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    chatHistory.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
+                }
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error loading chat history:', error);
+                document.getElementById('chatHistory').innerHTML = '<div class="text-danger">Error loading messages</div>';
+            });
+    }
+    
+    // No updateTicket or resolveTicket functions in minimal version
+    
+    function sendMessage() {
+        const messageText = document.getElementById('newMessage').value.trim();
+        if (!messageText) return;
+        const data = {
+            message: messageText,
+            sender_name: 'User',
+            sender_type: 'user'
+        };
+        fetch(`/api/tickets/${ticketId}/messages`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('newMessage').value = '';
+                loadChatHistory();
+            } else {
+                alert('Error sending message: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            alert('Error sending message');
+        });
+    }
+    
+    function getAISuggestion() {
+        const btn = document.getElementById('getAISuggestion');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting suggestion...';
+        btn.disabled = true;
+        
+        fetch('/api/agent/ask', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                question: `How should I handle this ticket? Issue: {{ ticket.issue_description }}`,
+                ticket_id: ticketId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const suggestionDiv = document.getElementById('aiSuggestion');
+            if (data.error) {
+                suggestionDiv.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+            } else {
+                suggestionDiv.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>AI Suggestion:</strong><br>
+                        ${data.guidance || 'No specific guidance available'}
+                        ${data.next_steps ? '<br><br><strong>Next Steps:</strong><br>' + data.next_steps : ''}
+                        ${data.policies_referenced ? '<br><br><strong>Policies:</strong> ' + data.policies_referenced.join(', ') : ''}
+                    </div>
+                `;
+            }
+            suggestionDiv.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error getting AI suggestion:', error);
+            document.getElementById('aiSuggestion').innerHTML = '<div class="alert alert-danger">Error getting AI suggestion</div>';
+            document.getElementById('aiSuggestion').style.display = 'block';
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+# Environment Variables (contains API keys)
+.env
+
+# Database files (contains user data)
+*.db
+
+# Python cache
+__pycache__/
+
+# Virtual environment
+venv/

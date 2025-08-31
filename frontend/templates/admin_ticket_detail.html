@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Ticket #{{ ticket.ticket_id }} Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 bg-dark text-light min-vh-100" style="padding-bottom:40px;">
+    <!-- Admin Navigation -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-info">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ticket Information Card -->
+        <div class="col-lg-8">
+            <div class="card bg-dark border-info mb-4 shadow">
+                <div class="card-header d-flex justify-content-between align-items-center border-info bg-dark text-info">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ticket-alt me-2"></i>
+                        Ticket #{{ ticket.ticket_id }} - Admin View
+                    </h4>
+                    <span class="badge bg-{{ 'success' if ticket.status == 'Resolved' else 'warning' if ticket.status == 'In Progress' else 'secondary' }} fs-6">
+                        {{ ticket.status }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Employee:</strong> {{ ticket.employee_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Priority:</strong> 
+                            <span class="badge bg-{{ 'danger' if ticket.priority == 'High' else 'warning' if ticket.priority == 'Medium' else 'info' }}">
+                                {{ ticket.priority }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Created:</strong> {{ ticket.created_at }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Updated:</strong> {{ ticket.updated_at }}
+                        </div>
+                    </div>
+                    {% if ticket.assigned_to %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Assigned To:</strong> {{ ticket.assigned_to }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Issue Description:</strong>
+                        <div class="mt-2 p-3 bg-secondary rounded">
+                            {{ ticket.issue_description }}
+                        </div>
+                    </div>
+
+                    <!-- Admin Controls -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="adminStatusSelect" class="form-label"><strong>Update Status:</strong></label>
+                            <select id="adminStatusSelect" class="form-select" data-ticket-id="{{ ticket.ticket_id }}">
+                                <option value="New" {{ 'selected' if ticket.status == 'New' else '' }}>New</option>
+                                <option value="In Progress" {{ 'selected' if ticket.status == 'In Progress' else '' }}>In Progress</option>
+                                <option value="Resolved" {{ 'selected' if ticket.status == 'Resolved' else '' }}>Resolved</option>
+                                <option value="Closed" {{ 'selected' if ticket.status == 'Closed' else '' }}>Closed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="adminAssignSelect" class="form-label"><strong>Assign To:</strong></label>
+                            <select id="adminAssignSelect" class="form-select" data-ticket-id="{{ ticket.ticket_id }}">
+                                <option value="">Unassigned</option>
+                                <option value="admin" {{ 'selected' if ticket.assigned_to == 'admin' else '' }}>Admin</option>
+                                <option value="support" {{ 'selected' if ticket.assigned_to == 'support' else '' }}>Support Team</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Communication History -->
+            <div class="card bg-dark border-info shadow">
+                <div class="card-header border-info bg-dark text-info">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Communication History
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="chatHistory" class="mb-3" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    
+                    <!-- Admin Message Input -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <textarea id="adminMessage" class="form-control" rows="2" placeholder="Type admin message..."></textarea>
+                                <button class="btn btn-info" type="button" id="sendAdminMessage">
+                                    <i class="fas fa-paper-plane"></i> Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card bg-dark border-info mb-4 shadow">
+                <div class="card-header border-info bg-dark text-info">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-outline-success w-100 mb-2" onclick="quickResolve()">
+                        <i class="fas fa-check-circle"></i> Mark as Resolved
+                    </button>
+                    <button class="btn btn-outline-warning w-100 mb-2" onclick="takeOwnership()">
+                        <i class="fas fa-user-check"></i> Take Ownership
+                    </button>
+                    <a href="/agent?ticket_id={{ ticket.ticket_id }}" class="btn btn-outline-info w-100 mb-2">
+                        <i class="fas fa-robot"></i> AI Assistant
+                    </a>
+                </div>
+            </div>
+
+            <!-- Ticket Analytics -->
+            <div class="card bg-dark border-info shadow">
+                <div class="card-header border-info bg-dark text-info">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Ticket Analytics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Response Time:</small>
+                        <div class="text-info">Within SLA</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Messages:</small>
+                        <div class="text-info" id="messageCount">Loading...</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Last Activity:</small>
+                        <div class="text-info">{{ ticket.updated_at }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ticketId = "{{ ticket.ticket_id }}";
+    
+    // Load chat history
+    loadChatHistory();
+    
+    // Admin controls
+    document.getElementById('adminStatusSelect').addEventListener('change', updateTicketStatus);
+    document.getElementById('adminAssignSelect').addEventListener('change', updateTicketAssignment);
+    document.getElementById('sendAdminMessage').addEventListener('click', sendAdminMessage);
+    
+    // Enter key in message input
+    document.getElementById('adminMessage').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAdminMessage();
+        }
+    });
+    
+    function loadChatHistory() {
+        fetch(`/api/tickets/${ticketId}/messages`)
+            .then(response => response.json())
+            .then(data => {
+                const chatHistory = document.getElementById('chatHistory');
+                if (data.success && data.messages.length > 0) {
+                    chatHistory.innerHTML = data.messages.map(msg => {
+                        const isAI = msg.sender_name === 'AI Assistant' || msg.sender_type === 'assistant';
+                        const isAdmin = msg.sender_type === 'admin';
+                        const isUser = msg.sender_type === 'user' && !isAI;
+                        
+                        let bgClass, textClass, alignment, icon;
+                        
+                        if (isAI) {
+                            bgClass = 'bg-success';
+                            textClass = 'text-white';
+                            alignment = 'me-5';
+                            icon = '<i class="fas fa-robot me-1"></i>';
+                        } else if (isAdmin) {
+                            bgClass = 'bg-info';
+                            textClass = 'text-dark';
+                            alignment = 'ms-5';
+                            icon = '<i class="fas fa-user-tie me-1"></i>';
+                        } else {
+                            bgClass = 'bg-primary';
+                            textClass = 'text-white';
+                            alignment = 'ms-5';
+                            icon = '<i class="fas fa-user me-1"></i>';
+                        }
+                        
+                        return `
+                            <div class="message mb-3 p-3 rounded ${bgClass} ${textClass} ${alignment}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>${icon}${msg.sender_name}</strong>
+                                    <small class="opacity-75">${msg.timestamp}</small>
+                                </div>
+                                <div class="mt-1">${msg.message}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Update message count
+                    document.getElementById('messageCount').textContent = data.messages.length + ' messages';
+                } else {
+                    chatHistory.innerHTML = '<div class="text-center text-muted">No messages yet.</div>';
+                    document.getElementById('messageCount').textContent = '0 messages';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading chat history:', error);
+            });
+    }
+    
+    function sendAdminMessage() {
+        const messageInput = document.getElementById('adminMessage');
+        const message = messageInput.value.trim();
+        
+        if (!message) return;
+        
+        fetch(`/api/tickets/${ticketId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                sender_name: '{{ session.username }}',
+                sender_type: 'admin'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageInput.value = '';
+                loadChatHistory();
+            } else {
+                alert('Failed to send message: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            alert('Failed to send message');
+        });
+    }
+    
+    function updateTicketStatus() {
+        const select = document.getElementById('adminStatusSelect');
+        const newStatus = select.value;
+        
+        fetch(`/api/tickets/${ticketId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh to show updated status
+            } else {
+                alert('Failed to update status: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating status:', error);
+        });
+    }
+    
+    function updateTicketAssignment() {
+        const select = document.getElementById('adminAssignSelect');
+        const assignee = select.value;
+        
+        fetch(`/api/tickets/${ticketId}/assign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assigned_to: assignee
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message without reload
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-success alert-dismissible fade show';
+                notification.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>Ticket assigned successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container-fluid').insertBefore(notification, document.querySelector('.row'));
+            } else {
+                alert('Failed to assign ticket: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error assigning ticket:', error);
+        });
+    }
+});
+
+function quickResolve() {
+    document.getElementById('adminStatusSelect').value = 'Resolved';
+    document.getElementById('adminStatusSelect').dispatchEvent(new Event('change'));
+}
+
+function takeOwnership() {
+    document.getElementById('adminAssignSelect').value = 'admin';
+    document.getElementById('adminAssignSelect').dispatchEvent(new Event('change'));
+}
+</script>
+{% endblock %}
